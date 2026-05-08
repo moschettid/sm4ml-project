@@ -2,7 +2,7 @@
 
 * stochastic    — one good expert, the rest worse, all i.i.d. Bernoulli;
 * adversarial   — best expert shifts in fixed-length segments (deterministic);
-* low_gap       — one expert is only marginally better than the rest.
+* low_gap       — one expert suffers constant loss 0.49, all others 0.50 (deterministic).
 
 All generators return an array of shape (T, K) with values in {0, 1} or [0, 1].
 """
@@ -53,13 +53,13 @@ def adversarial_shifting(
 def low_gap_losses(
     T: int,
     K: int,
-    best_p: float = 0.49,
-    others_p: float = 0.5,
+    best_loss: float = 0.49,
+    others_loss: float = 0.5,
     best_idx: int = 0,
-    rng: np.random.Generator | None = None,
+    _rng: np.random.Generator | None = None,  # actually it is unused. but it is kept for a uniform API and potential future use
 ) -> np.ndarray:
-    """Hard stochastic regime: best expert wins by a tiny margin."""
-    rng = rng if rng is not None else np.random.default_rng()
-    probs = np.full(K, others_p, dtype=float)
-    probs[best_idx] = best_p
-    return (rng.random((T, K)) < probs).astype(float)
+    """Low-gap deterministic regime: best expert suffers constant loss best_loss,
+    all others suffer constant loss others_loss."""
+    losses = np.full((T, K), others_loss, dtype=float)
+    losses[:, best_idx] = best_loss
+    return losses
